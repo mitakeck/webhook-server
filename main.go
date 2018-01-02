@@ -1,20 +1,23 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"os"
 )
 
 func handleWebhook(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("headers: %v\n", r.Header)
-
-	_, err := io.Copy(os.Stdin, r.Body)
+	webhookData := make(map[string]interface{})
+	err := json.NewDecoder(r.Body).Decode(&webhookData)
 	if err != nil {
-		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	fmt.Println("payload: ")
+	for k, v := range webhookData {
+		fmt.Printf("%s: %v\n", k, v)
 	}
 }
 
