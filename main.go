@@ -3,22 +3,28 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/k0kubun/pp"
 )
 
 func handleWebhook(w http.ResponseWriter, r *http.Request) {
-	webhookData := make(map[string]interface{})
-	err := json.NewDecoder(r.Body).Decode(&webhookData)
+	payload, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("error reading request body: err=%s", err)
 		return
 	}
 
-	fmt.Println("payload: ")
-	for k, v := range webhookData {
-		fmt.Printf("%s: %v\n", k, v)
+	defer r.Body.Close()
+
+	var activity Activity
+	if err := json.Unmarshal(payload, &activity); err != nil {
+		fmt.Println("Json Unmarshal Error")
+		return
 	}
+	pp.Print(activity)
 }
 
 func main() {
